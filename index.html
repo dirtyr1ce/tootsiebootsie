@@ -1234,15 +1234,24 @@ async function init() {
   // Show fallback deck immediately so app feels instant
   initDeck();
 
+  // GUARANTEED fallback — always dismiss loading after 8 seconds no matter what
+  const maxWait = setTimeout(() => {
+    clearInterval(iv);
+    hideLanding();
+    toast('💡 Demo mode — enable location for real discoveries');
+  }, 8000);
+
   // Get location
   if (!navigator.geolocation) {
     document.getElementById('city-name').textContent = 'TootsieBootsie';
     clearInterval(iv);
+    clearTimeout(maxWait);
     hideLanding();
     return;
   }
 
   navigator.geolocation.getCurrentPosition(async pos => {
+    clearTimeout(maxWait); // cancel the fallback timer
     userLat = pos.coords.latitude;
     userLng = pos.coords.longitude;
 
@@ -1312,8 +1321,9 @@ async function init() {
     }
 
   }, () => {
-    document.getElementById('city-name').textContent = 'Enable location';
+    clearTimeout(maxWait);
     clearInterval(iv);
+    document.getElementById('city-name').textContent = 'Enable location';
     hideLanding();
     toast('📍 Enable location for real nearby discoveries');
   }, { enableHighAccuracy: true, timeout: 10000 });
