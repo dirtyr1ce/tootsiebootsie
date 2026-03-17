@@ -1,0 +1,17 @@
+{
+  "version": 2,
+  "builds": [
+    { "src": "api/index.py", "use": "@vercel/python" },
+    { "src": "index.html",   "use": "@vercel/static"  }
+  ],
+  "routes": [
+    { "src": "/api/(.*)", "dest": "api/index.py" },
+    { "src": "/(.*)",     "dest": "index.html"   }
+  ],
+  "env": {
+    "GOOGLE_KEY":        "@google_key",
+    "ANTHROPIC_KEY":     "@anthropic_key",
+    "SUPABASE_URL":      "@supabase_url",
+    "SUPABASE_ANON_KEY": "@supabase_anon_key"
+  }
+}
