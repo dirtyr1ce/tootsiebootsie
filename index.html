@@ -469,10 +469,20 @@ html, body {
 </head>
 <body>
 
+<!-- Nuclear fallback — hides loading screen after 10s no matter what -->
+<script>
+setTimeout(function() {
+  var ls = document.getElementById('loading-screen');
+  if (ls && ls.style.display !== 'none') {
+    ls.style.opacity = '0';
+    ls.style.pointerEvents = 'none';
+    setTimeout(function() { ls.style.display = 'none'; }, 600);
+  }
+}, 10000);
+</script>
+
 <!-- Supabase -->
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
-
-<!-- Auth button -->
 <button id="auth-btn" onclick="handleAuth()">
   <img id="auth-avatar" src="" alt=""/>
   <span id="auth-label">Sign in</span>
@@ -561,7 +571,6 @@ html, body {
   </div>
 </div>
 
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 <script>
 // ── Data ──────────────────────────────────────────────────────────────────────
