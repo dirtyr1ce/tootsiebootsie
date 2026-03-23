@@ -482,10 +482,6 @@ setTimeout(function() {
 </script>
 
 <!-- Supabase -->
-<script>
-window.SUPABASE_URL = window.SUPABASE_URL || '';
-window.SUPABASE_ANON = window.SUPABASE_ANON || '';
-</script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
 <button id="auth-btn" onclick="handleAuth()">
   <img id="auth-avatar" src="" alt=""/>
@@ -1360,7 +1356,7 @@ function hideLanding() {
 const SUPABASE_URL  = window.SUPABASE_URL  || '';
 const SUPABASE_ANON = window.SUPABASE_ANON || '';
 
-let sbClient = null;
+let supabase = null;
 let currentUser = null;
 let userJwt = null;
 let traceTarget = null;   // { place_name, place_type, lat, lng }
@@ -1369,15 +1365,15 @@ let tcPhotoFile = null;
 // Init Supabase
 function initSupabase() {
   if (!SUPABASE_URL || !SUPABASE_ANON) return;
-  sbClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON);
+  supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON);
   // Listen for auth changes
-  sbClient.auth.onAuthStateChange((event, session) => {
+  supabase.auth.onAuthStateChange((event, session) => {
     currentUser = session?.user || null;
     userJwt = session?.access_token || null;
     updateAuthUI();
   });
   // Restore session
-  sbClient.auth.getSession().then(({ data }) => {
+  supabase.auth.getSession().then(({ data }) => {
     currentUser = data.session?.user || null;
     userJwt = data.session?.access_token || null;
     updateAuthUI();
@@ -1398,15 +1394,15 @@ function updateAuthUI() {
 }
 
 window.handleAuth = async function() {
-  if (!sbClient) {
+  if (!supabase) {
     toast('Sign in available in the deployed app');
     return;
   }
   if (currentUser) {
-    await sbClient.auth.signOut();
+    await supabase.auth.signOut();
     toast('Signed out');
   } else {
-    await sbClient.auth.signInWithOAuth({
+    await supabase.auth.signInWithOAuth({
       provider: 'google',
       options: { redirectTo: window.location.href }
     });
@@ -1448,7 +1444,7 @@ function buildTracesSection(data) {
 
 // ── Open / close trace composer ───────────────────────────────
 window.openTraceComposer = function(placeName, placeType) {
-  if (!currentUser && sbClient) {
+  if (!currentUser && supabase) {
     toast('Sign in to leave a Trace');
     handleAuth();
     return;
