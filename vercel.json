@@ -2,20 +2,14 @@
   "version": 2,
   "builds": [
     { "src": "api/index.py", "use": "@vercel/python" },
-    { "src": "index.html",   "use": "@vercel/static" },
-    { "src": "manifest.json","use": "@vercel/static" },
-    { "src": "sw.js",        "use": "@vercel/static" }
+    { "src": "index.html", "use": "@vercel/static" },
+    { "src": "manifest.json", "use": "@vercel/static" },
+    { "src": "sw.js", "use": "@vercel/static" }
   ],
   "routes": [
-    { "src": "/api/(.*)",     "dest": "api/index.py" },
-    { "src": "/manifest.json","dest": "/manifest.json" },
-    { "src": "/sw.js",        "dest": "/sw.js" },
-    { "src": "/(.*)",         "dest": "/index.html" }
-  ],
-  "env": {
-    "GOOGLE_KEY":        "@google_key",
-    "ANTHROPIC_KEY":     "@anthropic_key",
-    "SUPABASE_URL":      "@supabase_url",
-    "SUPABASE_ANON_KEY": "@supabase_anon_key"
-  }
+    { "src": "/api/(.*)", "dest": "api/index.py" },
+    { "src": "/manifest.json", "dest": "/manifest.json" },
+    { "src": "/sw.js", "dest": "/sw.js" },
+    { "src": "/(.*)", "dest": "/index.html" }
+  ]
 }
