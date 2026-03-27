@@ -1,0 +1,349 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"/>
+<title>TootsieBootsie Day Tripper</title>
+<link rel="manifest" href="/manifest.json"/>
+<meta name="apple-mobile-web-app-capable" content="yes"/>
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"/>
+<meta name="apple-mobile-web-app-title" content="TootsieBootsie"/>
+<link rel="apple-touch-icon" href="/icons/icon-152.png"/>
+<meta name="theme-color" content="#1a1035"/>
+<meta name="description" content="Discover your perfect day — local gems, day trips, and trails near you."/>
+<link rel="icon" type="image/png" sizes="32x32" href="/icons/icon-96.png"/>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;0,900;1,700&family=DM+Sans:wght@300;400;600;700&display=swap" rel="stylesheet"/>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<style>
+*{box-sizing:border-box;margin:0;padding:0;}
+html,body{width:100%;height:100%;overflow:hidden;background:#1a1035;font-family:'DM Sans',sans-serif;touch-action:none;user-select:none;}
+#c{position:fixed;inset:0;z-index:1;}
+#logo{position:fixed;top:18px;left:50%;transform:translateX(-50%);text-align:center;pointer-events:none;z-index:10;}
+#logo .eyebrow{font-size:9px;letter-spacing:4px;color:#c4b5fd;font-weight:700;text-transform:uppercase;margin-bottom:2px;}
+#logo .name{font-family:'Playfair Display',serif;font-size:26px;font-weight:900;color:#fff;line-height:1;letter-spacing:-.5px;text-shadow:0 0 40px rgba(196,181,253,.7),0 0 80px rgba(168,85,247,.4);}
+#logo .city{font-size:11px;color:#a78bfa;font-weight:600;letter-spacing:1.5px;margin-top:3px;display:flex;align-items:center;justify-content:center;gap:5px;}
+#city-dot{width:5px;height:5px;border-radius:50%;background:#a855f7;animation:blink 2s ease-in-out infinite;}
+@keyframes blink{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.3;transform:scale(.7)}}
+#mode-toggle{position:fixed;top:18px;right:14px;z-index:20;display:flex;flex-direction:column;gap:5px;}
+.mbtn{padding:7px 13px;font-size:10px;font-weight:700;cursor:pointer;border:1px solid rgba(196,181,253,.2);background:rgba(26,16,53,.85);backdrop-filter:blur(12px);font-family:'DM Sans',sans-serif;color:rgba(196,181,253,.55);transition:all .25s;letter-spacing:.5px;border-radius:20px;display:flex;align-items:center;gap:5px;}
+.mbtn.active{background:linear-gradient(135deg,#a855f7,#ec4899);color:#fff;border-color:transparent;box-shadow:0 4px 20px rgba(168,85,247,.5);}
+.mbtn .mic{font-size:13px;}
+#auth-btn{position:fixed;top:18px;left:14px;z-index:20;background:rgba(26,16,53,.85);backdrop-filter:blur(12px);border:1px solid rgba(196,181,253,.2);border-radius:20px;padding:7px 13px;font-size:10px;font-weight:600;color:rgba(196,181,253,.7);cursor:pointer;display:flex;align-items:center;gap:6px;font-family:'DM Sans',sans-serif;}
+#auth-avatar{width:18px;height:18px;border-radius:50%;object-fit:cover;display:none;}
+#hint{position:fixed;bottom:22px;left:50%;transform:translateX(-50%);background:rgba(26,16,53,.85);backdrop-filter:blur(10px);border-radius:30px;padding:8px 22px;font-size:11px;color:#e9d5ff;font-weight:600;white-space:nowrap;border:1px solid rgba(196,181,253,.2);pointer-events:none;z-index:10;}
+#saved-bar{display:none;position:fixed;bottom:60px;left:50%;transform:translateX(-50%);background:rgba(26,16,53,.9);backdrop-filter:blur(10px);border-radius:20px;padding:7px 18px;font-size:11px;color:#e9d5ff;font-weight:600;border:1px solid rgba(196,181,253,.2);pointer-events:none;z-index:10;white-space:nowrap;max-width:90vw;overflow:hidden;text-overflow:ellipsis;}
+#radius-bar{display:none;position:fixed;bottom:60px;left:50%;transform:translateX(-50%);z-index:15;gap:8px;}
+#radius-bar.visible{display:flex;}
+.rpill{padding:6px 16px;border-radius:20px;font-size:10px;font-weight:700;background:rgba(26,16,53,.85);border:1px solid rgba(196,181,253,.2);color:rgba(196,181,253,.6);cursor:pointer;font-family:'DM Sans',sans-serif;}
+.rpill.active{background:linear-gradient(135deg,#a855f7,#ec4899);color:#fff;border-color:transparent;}
+#panel-overlay{display:none;position:fixed;inset:0;z-index:50;align-items:flex-end;}
+#panel-overlay.open{display:flex;}
+#panel-backdrop{position:absolute;inset:0;background:rgba(0,0,0,.55);backdrop-filter:blur(6px);}
+#panel-sheet{position:relative;z-index:1;background:#faf6ef;border-radius:24px 24px 0 0;width:100%;padding:22px 20px max(32px,env(safe-area-inset-bottom));max-height:84vh;overflow-y:auto;transform:translateY(100%);transition:transform .38s cubic-bezier(.34,1.2,.64,1);}
+#panel-overlay.open #panel-sheet{transform:translateY(0);}
+.sh-handle{width:36px;height:4px;border-radius:2px;background:#ddd4c8;margin:0 auto 16px;}
+.sh-emoji{font-size:48px;text-align:center;margin-bottom:10px;}
+.sh-name{font-family:'Playfair Display',serif;font-size:26px;font-weight:700;color:#1a1612;line-height:1.2;margin-bottom:5px;}
+.sh-type{font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:1.2px;padding:3px 10px;border-radius:10px;display:inline-block;margin-bottom:10px;}
+.sh-why{font-size:13px;color:#3d3530;line-height:1.75;margin-bottom:10px;}
+.sh-tip{font-size:12px;color:#8c7f74;font-style:italic;border-left:2px solid #e0d8ce;padding-left:10px;line-height:1.6;margin-bottom:14px;}
+.sh-tags{display:flex;flex-wrap:wrap;gap:5px;margin-bottom:14px;}
+.sh-tag{font-size:10px;color:#8c7f74;background:white;border:1px solid rgba(60,50,40,.12);border-radius:8px;padding:3px 10px;}
+.sh-buzz-row{display:flex;align-items:center;gap:8px;margin-bottom:14px;}
+.sh-buzz-track{flex:1;height:4px;background:#ede5d8;border-radius:2px;overflow:hidden;}
+.sh-buzz-fill{height:100%;border-radius:2px;}
+.sh-stars{font-size:13px;color:#d4a054;}
+.sh-actions{display:flex;gap:8px;margin-top:4px;}
+.sh-save{flex:1;padding:13px;border-radius:13px;background:#1a1612;color:white;font-size:13px;font-weight:700;border:none;cursor:pointer;font-family:'DM Sans',sans-serif;}
+.sh-save.saved{background:#2e6b5e;}
+.sh-close{padding:13px 16px;border-radius:13px;background:white;border:1px solid rgba(60,50,40,.12);font-size:13px;color:#8c7f74;cursor:pointer;font-family:'DM Sans',sans-serif;}
+.sh-stats{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin-bottom:14px;}
+.sh-stat{background:#edf1f8;border-radius:10px;padding:8px;text-align:center;}
+.sh-stat-v{font-size:13px;font-weight:700;color:#3d5a8a;}
+.sh-stat-l{font-size:8px;color:#8c7f74;margin-top:2px;}
+.sh-drive{display:inline-flex;align-items:center;gap:5px;background:#edf5f3;border-radius:12px;padding:5px 12px;font-size:11px;font-weight:700;color:#2e6b5e;margin-bottom:14px;}
+.open-yes{display:inline-block;padding:2px 8px;border-radius:10px;font-size:9px;font-weight:700;margin-bottom:8px;background:rgba(34,197,94,.15);color:#16a34a;}
+.open-no{display:inline-block;padding:2px 8px;border-radius:10px;font-size:9px;font-weight:700;margin-bottom:8px;background:rgba(239,68,68,.12);color:#dc2626;}
+.traces-wall{display:grid;grid-template-columns:repeat(3,1fr);gap:4px;margin:10px 0;}
+.trace-thumb{aspect-ratio:1;border-radius:8px;object-fit:cover;width:100%;background:#f0ebe3;cursor:pointer;}
+.trace-empty{aspect-ratio:1;border-radius:8px;background:#faf6ef;border:1px dashed rgba(60,50,40,.18);display:flex;align-items:center;justify-content:center;font-size:20px;cursor:pointer;}
+.trace-count{font-size:11px;color:#8c7f74;margin-bottom:6px;}
+.trace-count strong{color:#1a1612;}
+.btn-trace{width:100%;border:1.5px dashed rgba(60,50,40,.18);border-radius:11px;padding:9px;font-size:11px;font-weight:600;cursor:pointer;background:transparent;color:#8c7f74;font-family:'DM Sans',sans-serif;margin-top:6px;}
+#trace-composer{position:fixed;inset:0;z-index:80;display:flex;align-items:flex-end;opacity:0;pointer-events:none;transition:opacity .3s;}
+#trace-composer.open{opacity:1;pointer-events:all;}
+#tc-bg{position:absolute;inset:0;background:rgba(0,0,0,.6);backdrop-filter:blur(4px);}
+#tc-sheet{position:relative;z-index:1;background:white;border-radius:24px 24px 0 0;width:100%;padding:20px 20px max(28px,env(safe-area-inset-bottom));transform:translateY(100%);transition:transform .35s cubic-bezier(.34,1.2,.64,1);}
+#trace-composer.open #tc-sheet{transform:translateY(0);}
+.tc-handle{width:36px;height:4px;border-radius:2px;background:#ddd4c8;margin:0 auto 16px;}
+.tc-title{font-family:'Playfair Display',serif;font-size:20px;font-weight:700;color:#1a1612;margin-bottom:3px;}
+.tc-sub{font-size:12px;color:#8c7f74;margin-bottom:14px;}
+#tc-photo-area{width:100%;height:150px;border-radius:14px;background:#faf6ef;border:2px dashed rgba(60,50,40,.18);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;cursor:pointer;margin-bottom:12px;overflow:hidden;}
+#tc-preview{width:100%;height:100%;object-fit:cover;display:none;}
+#tc-ph{display:flex;flex-direction:column;align-items:center;gap:5px;}
+#tc-ph span{font-size:30px;}
+#tc-ph small{font-size:11px;color:#8c7f74;}
+#tc-text{width:100%;border:1px solid rgba(60,50,40,.18);border-radius:11px;padding:11px 13px;font-size:14px;font-family:'DM Sans',sans-serif;color:#1a1612;resize:none;height:68px;line-height:1.5;outline:none;}
+#tc-text:focus{border-color:#a855f7;}
+.tc-char{font-size:10px;color:#8c7f74;text-align:right;margin-top:3px;margin-bottom:12px;}
+.tc-row{display:flex;gap:8px;}
+.tc-go{flex:1;padding:12px;border-radius:12px;background:linear-gradient(135deg,#a855f7,#ec4899);color:white;border:none;font-size:12px;font-weight:700;cursor:pointer;font-family:'DM Sans',sans-serif;}
+.tc-go:disabled{opacity:.4;cursor:not-allowed;}
+.tc-cancel{padding:12px 16px;border-radius:12px;background:#faf6ef;border:1px solid rgba(60,50,40,.12);font-size:12px;color:#8c7f74;cursor:pointer;font-family:'DM Sans',sans-serif;}
+#toast{position:fixed;top:74px;left:50%;transform:translateX(-50%);background:rgba(168,85,247,.92);color:#fff;padding:8px 20px;border-radius:22px;font-size:11px;font-weight:600;z-index:100;pointer-events:none;opacity:0;transition:opacity .28s;white-space:nowrap;}
+#toast.show{opacity:1;}
+#install-banner{position:fixed;bottom:74px;left:14px;right:14px;background:rgba(244,237,224,.96);border-radius:18px;padding:12px 14px;display:none;align-items:center;gap:10px;border:1px solid rgba(168,85,247,.2);z-index:30;}
+#install-banner.visible{display:flex;}
+.ib-icon{font-size:28px;flex-shrink:0;}
+.ib-text{flex:1;}
+.ib-title{font-family:'Playfair Display',serif;font-size:14px;font-weight:700;color:#1a1612;margin-bottom:1px;}
+.ib-sub{font-size:10px;color:#8c7f74;}
+.ib-btn{background:linear-gradient(135deg,#a855f7,#ec4899);color:white;border:none;border-radius:10px;padding:7px 13px;font-size:11px;font-weight:700;cursor:pointer;font-family:'DM Sans',sans-serif;white-space:nowrap;flex-shrink:0;}
+.ib-x{background:none;border:none;color:#8c7f74;font-size:16px;cursor:pointer;flex-shrink:0;padding:4px;}
+#loading{position:fixed;inset:0;background:radial-gradient(ellipse at 50% 40%,#2d1060 0%,#1a1035 55%,#0f0828 100%);display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:200;transition:opacity .7s;gap:16px;}
+#loading.out{opacity:0;pointer-events:none;}
+.l-ring{width:50px;height:50px;border:2px solid rgba(196,181,253,.15);border-top-color:#a855f7;border-radius:50%;animation:spin .9s linear infinite;box-shadow:0 0 24px rgba(168,85,247,.45);}
+.l-name{font-family:'Playfair Display',serif;font-size:30px;color:#fff;text-shadow:0 0 40px rgba(196,181,253,.6);}
+.l-msg{font-size:12px;color:#a78bfa;letter-spacing:.5px;min-height:18px;text-align:center;}
+.l-bar{width:180px;height:3px;background:rgba(196,181,253,.12);border-radius:2px;overflow:hidden;}
+.l-fill{height:100%;background:linear-gradient(90deg,#a855f7,#ec4899);border-radius:2px;transition:width .45s ease;width:0%;}
+@keyframes spin{to{transform:rotate(360deg);}}
+</style>
+</head>
+<body>
+<canvas id="c"></canvas>
+<button id="auth-btn" onclick="handleAuth()"><img id="auth-avatar" src="" alt=""/><span id="auth-label">Sign in</span></button>
+<div id="logo"><div class="eyebrow">✦ welcome to ✦</div><div class="name">TootsieBootsie</div><div class="city"><div id="city-dot"></div><span id="city-tag">Day Tripper</span></div></div>
+<div id="mode-toggle">
+  <button class="mbtn active" id="btn-local" onclick="setMode('local')"><span class="mic">🏙️</span>Stay Local</button>
+  <button class="mbtn" id="btn-trip" onclick="setMode('trip')"><span class="mic">🚗</span>Day Trip</button>
+  <button class="mbtn" id="btn-hike" onclick="setMode('hike')"><span class="mic">🥾</span>Adventure</button>
+</div>
+<div id="hint">🌍 Drag to spin · Tap a bubble to explore</div>
+<div id="saved-bar"></div>
+<div id="radius-bar">
+  <button class="rpill" onclick="setRadius(30)">30 min</button>
+  <button class="rpill active" onclick="setRadius(60)">1 hr</button>
+  <button class="rpill" onclick="setRadius(120)">2 hrs</button>
+</div>
+<div id="panel-overlay"><div id="panel-backdrop" onclick="closePanel()"></div><div id="panel-sheet"><div class="sh-handle"></div><div id="panel-content"></div></div></div>
+<div id="trace-composer"><div id="tc-bg" onclick="closeTC()"></div><div id="tc-sheet"><div class="tc-handle"></div><div class="tc-title">Leave a Trace</div><div class="tc-sub" id="tc-name"></div><div id="tc-photo-area" onclick="document.getElementById('tc-file').click()"><img id="tc-preview" src="" alt=""/><div id="tc-ph"><span>📸</span><small>Tap to add photo</small></div></div><input id="tc-file" type="file" accept="image/*" style="display:none"/><textarea id="tc-text" placeholder="One honest sentence about this place…" maxlength="120"></textarea><div class="tc-char"><span id="tc-count">0</span>/120</div><div class="tc-row"><button class="tc-cancel" onclick="closeTC()">Cancel</button><button class="tc-go" id="tc-go" onclick="submitTrace()" disabled>Leave Trace ✦</button></div></div></div>
+<div id="install-banner"><div class="ib-icon">🗺️</div><div class="ib-text"><div class="ib-title">Add to Home Screen</div><div class="ib-sub">Works offline · No App Store needed</div></div><button class="ib-btn" onclick="triggerInstall()">Install</button><button class="ib-x" onclick="hideInstallBanner()">✕</button></div>
+<div id="toast"></div>
+<div id="loading"><div class="l-ring"></div><div class="l-name">TootsieBootsie</div><div class="l-msg" id="lmsg">Waking up the world…</div><div class="l-bar"><div class="l-fill" id="lprog"></div></div></div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
+<script>
+const API='';
+const SB_URL='https://bhwuyfmrbiyqeklltibv.supabase.co';
+const SB_ANON='sb_publishable_-wCWkJey5XT63bO6wJc5-A_P-C9L8hN';
+const FALLBACK={local:[{id:1,emoji:'☕',name:'Cocoa Cinnamon',type:'local',why:'Three locations, each different. The West Club one — single-origin pour-overs, weird walls, people actually talking.',tip:'The horchata latte is the move. Trust.',tags:['Coffee','Morning','Neighbourhood'],buzz:.85,rating:4.7,dist:'10 min'},{id:2,emoji:'🏛️',name:'Millwork District',type:'local',why:"Durham's old tobacco warehouses turned into one of the best industrial neighbourhoods in the South.",tip:"Park on Foster St and wander — the best stuff isn't signposted.",tags:['Historic','Walk','Free'],buzz:.76,rating:4.7,dist:'12 min'},{id:3,emoji:'🎵',name:'Live Jazz at Pinhook',type:'local',why:'An absolute Durham institution. Exposed brick, good bourbon, crowd that actually listens.',tip:'Check their Instagram morning of. Shows start at 9pm sharp.',tags:['Music','Nightlife','Culture'],buzz:.91,rating:4.9,dist:'18 min'},{id:4,emoji:'🌳',name:'Eno River Park',type:'local',why:"You forget you're 15 minutes from downtown. Quiet, rocky, genuinely beautiful.",tip:'Weekdays only if you can — weekend parking fills by 9am.',tags:['Nature','Walk','Free'],buzz:.88,rating:4.8,dist:'22 min'},{id:5,emoji:'🍑',name:'Durham Farmers Market',type:'local',why:'Saturday mornings only. Local honey, seasonal produce, strawberries that actually taste like strawberries.',tip:'Get there before 10am. Heirloom tomatoes go fast.',tags:['Food','Morning','Local'],buzz:.82,rating:4.8,dist:'8 min'}],trip:[{id:10,emoji:'⛵',name:'New Bern, NC',type:'trip',why:'Birthplace of Pepsi, Revolutionary War town on the Neuse River, one of the most walkable historic districts in NC.',tip:'Park near Tryon Palace and walk everything — whole historic district is under a mile.',tags:['Historic','Walkable','Waterfront'],buzz:.89,rating:4.8,dist:'1 hr 48 min',driveMin:108},{id:11,emoji:'🏔️',name:'Asheville, NC',type:'trip',why:'Blue Ridge Parkway, a genuinely great food scene, and music that punches way above its weight.',tip:'Skip the Biltmore — walk the River Arts District and eat at Gan Shan Station.',tags:['Mountains','Food','Arts'],buzz:.94,rating:4.9,dist:'2 hrs 10 min',driveMin:130},{id:12,emoji:'🌊',name:'Beaufort, NC',type:'trip',why:'Tiny coastal town with wild horses on an island just offshore. Best clam chowder you will ever have.',tip:'Take the ferry to Carrot Island — wild horses literally graze on the beach.',tags:['Coastal','Wildlife','Historic'],buzz:.86,rating:4.8,dist:'2 hrs 5 min',driveMin:125},{id:13,emoji:'🏛️',name:'Hillsborough, NC',type:'trip',why:"NC's most underrated small town. Revolutionary War history, the Eno River, great restaurants.",tip:'Walk Churton Street then follow the Riverwalk behind it.',tags:['Historic','Walk','Close'],buzz:.78,rating:4.6,dist:'32 min',driveMin:32},{id:14,emoji:'🎨',name:'Seagrove, NC',type:'trip',why:'The pottery capital of the US — over 100 working studios. Watch potters throw clay and buy direct.',tip:'Go on a weekday. Ben Owen III is the one to find.',tags:['Arts','Culture','Unique'],buzz:.81,rating:4.7,dist:'1 hr 10 min',driveMin:70}],hike:[{id:20,emoji:'⛰️',name:'Occoneechee Mtn',type:'hike',why:'Highest point in the NC Piedmont. Old quarry, great views, genuinely wild feeling 45 minutes from Durham.',tip:'Summit Loop is 2.7 miles but earns the view. Go at golden hour.',tags:['Summit','Views','Moderate'],buzz:.83,rating:4.7,dist:'45 min',trail:{d:'2.7 mi',e:'+380 ft',diff:2}},{id:21,emoji:'💧',name:'Eno River Pump Station',type:'hike',why:'Swimming holes, old mill ruins, the best trail in the Triangle. The river is the trail the whole way.',tip:'Rocks past the old pump station are the best swimming spot. Bring water shoes.',tags:['River','Swimming','Easy'],buzz:.88,rating:4.8,dist:'18 min',trail:{d:'3.4 mi',e:'+220 ft',diff:1}},{id:22,emoji:'🌲',name:'Uwharrie National Forest',type:'hike',why:'Ancient mountains, the oldest in North America. Genuinely remote feeling 90 minutes from Durham.',tip:"Dutchman's Creek trail is the best entry point. Download offline maps.",tags:['Forest','Remote','Adventure'],buzz:.85,rating:4.7,dist:'1 hr 25 min',trail:{d:'6.2 mi',e:'+820 ft',diff:3}}]};
+
+let mode='local',radius=60,cityName='',userLat=null,userLng=null,userState='';
+let savedPlaces=[],activePlace=null,sbClient=null,currentUser=null,userJwt=null;
+let traceTarget=null,tcFile=null,deferredInstall=null;
+
+// THREE.JS
+const canvas=document.getElementById('c');
+const renderer=new THREE.WebGLRenderer({canvas,antialias:true,alpha:false});
+renderer.setPixelRatio(Math.min(devicePixelRatio,2));
+renderer.setSize(innerWidth,innerHeight);
+renderer.setClearColor(0x1a1035,1);
+const scene=new THREE.Scene();
+scene.fog=new THREE.FogExp2(0x1a1035,0.028);
+const camera=new THREE.PerspectiveCamera(55,innerWidth/innerHeight,0.1,100);
+camera.position.set(0,2,11);
+window.addEventListener('resize',()=>{renderer.setSize(innerWidth,innerHeight);camera.aspect=innerWidth/innerHeight;camera.updateProjectionMatrix();});
+
+// Lights
+scene.add(new THREE.AmbientLight(0xc4b5fd,0.6));
+const sun=new THREE.DirectionalLight(0xfff0e0,1.8);sun.position.set(5,12,5);scene.add(sun);
+const fill=new THREE.DirectionalLight(0x8040ff,0.7);fill.position.set(-6,4,-4);scene.add(fill);
+const rimLight=new THREE.PointLight(0xa855f7,2.5,25);rimLight.position.set(0,4,0);scene.add(rimLight);
+const groundGlow=new THREE.PointLight(0x6d28d9,1.2,15);groundGlow.position.set(0,-1,0);scene.add(groundGlow);
+
+// Ground
+const gnd=new THREE.Mesh(new THREE.CircleGeometry(22,64),new THREE.MeshStandardMaterial({color:0x2d1060,roughness:.8,metalness:.2,emissive:0x1a0840,emissiveIntensity:.4}));
+gnd.rotation.x=-Math.PI/2;gnd.position.y=-1.2;scene.add(gnd);
+const grid=new THREE.GridHelper(40,40,0x6d28d9,0x3d1a6e);
+grid.position.y=-1.18;grid.material.opacity=.35;grid.material.transparent=true;scene.add(grid);
+
+// Stars
+(()=>{const geo=new THREE.BufferGeometry(),n=400,p=new Float32Array(n*3),col=new Float32Array(n*3);
+for(let i=0;i<n;i++){const th=Math.random()*Math.PI*2,ph=Math.random()*Math.PI,r=20+Math.random()*8;
+p[i*3]=r*Math.sin(ph)*Math.cos(th);p[i*3+1]=r*Math.cos(ph);p[i*3+2]=r*Math.sin(ph)*Math.sin(th);
+const b=.5+Math.random()*.5;col[i*3]=b*.8;col[i*3+1]=b*.7;col[i*3+2]=b;}
+geo.setAttribute('position',new THREE.BufferAttribute(p,3));geo.setAttribute('color',new THREE.BufferAttribute(col,3));
+scene.add(new THREE.Points(geo,new THREE.PointsMaterial({size:.08,vertexColors:true,transparent:true,opacity:.9})));})();
+
+// Hills
+[[-8,-4,.12,.04,.22],[8,3,.1,.02,.2],[0,-9,.14,.04,.24],[-5,6,.1,.02,.18],[7,-5,.08,.01,.15]].forEach(([x,z,r,g,b],i)=>{
+const m=new THREE.Mesh(new THREE.SphereGeometry(3.5+i*.3,16,12),new THREE.MeshStandardMaterial({color:new THREE.Color(r,g,b),roughness:1,emissive:new THREE.Color(r*.4,g*.4,b*.4)}));
+m.position.set(x,-2.5,z);m.scale.y=.45;scene.add(m);});
+
+// Crystal shards
+for(let i=0;i<8;i++){const a=(i/8)*Math.PI*2,r=7+Math.random()*3,h=.8+Math.random()*1.4;
+const m=new THREE.Mesh(new THREE.CylinderGeometry(.04,.18+Math.random()*.1,h,6),new THREE.MeshStandardMaterial({color:0x6d28d9,emissive:0x3b0764,emissiveIntensity:.6,roughness:.1,metalness:.4,transparent:true,opacity:.75}));
+m.position.set(Math.cos(a)*r,-1.2+h/2,Math.sin(a)*r);m.rotation.x=(Math.random()-.5)*.3;m.rotation.z=(Math.random()-.5)*.3;scene.add(m);}
+
+// Particles
+const pGeo=new THREE.BufferGeometry(),pN=250,pPos=new Float32Array(pN*3),pVel=new Float32Array(pN*3);
+for(let i=0;i<pN;i++){pPos[i*3]=(Math.random()-.5)*18;pPos[i*3+1]=Math.random()*8;pPos[i*3+2]=(Math.random()-.5)*18;pVel[i*3]=(Math.random()-.5)*.004;pVel[i*3+1]=Math.random()*.006+.002;pVel[i*3+2]=(Math.random()-.5)*.004;}
+pGeo.setAttribute('position',new THREE.BufferAttribute(pPos,3));
+const particles=new THREE.Points(pGeo,new THREE.PointsMaterial({color:0xc4b5fd,size:.06,transparent:true,opacity:.55}));
+scene.add(particles);
+
+// BUBBLES
+const BCOLS={local:{base:0xa855f7,em:0x7c3aed},trip:{base:0xec4899,em:0xbe185d},hike:{base:0x4ade80,em:0x15803d}};
+const BPOS={local:[new THREE.Vector3(-3.8,.8,-1.2),new THREE.Vector3(3.5,.6,-1.5),new THREE.Vector3(-2.5,.5,2.8),new THREE.Vector3(2.8,.9,2.5),new THREE.Vector3(0,1,3.8)],trip:[new THREE.Vector3(-3.5,.8,0),new THREE.Vector3(0,.9,-2.8),new THREE.Vector3(3.5,.8,0),new THREE.Vector3(-2.2,.7,2.5),new THREE.Vector3(2.5,.7,2.2)],hike:[new THREE.Vector3(-3,.8,0),new THREE.Vector3(0,.8,-2.5),new THREE.Vector3(3,.8,0)]};
+let bubbles=[];
+
+function clearBubbles(){bubbles.forEach(b=>{scene.remove(b.mesh);scene.remove(b.glow);scene.remove(b.shine);scene.remove(b.shadow);});bubbles=[];}
+
+function spawnBubbles(places){
+  clearBubbles();
+  const c=BCOLS[mode],pos=BPOS[mode];
+  places.forEach((place,i)=>{
+    if(!pos[i])return;
+    const p=pos[i].clone();
+    const mesh=new THREE.Mesh(new THREE.SphereGeometry(.72,32,32),new THREE.MeshPhysicalMaterial({color:c.base,emissive:c.em,emissiveIntensity:.35,roughness:.05,metalness:0,transmission:.55,thickness:1.2,transparent:true,opacity:.88,side:THREE.DoubleSide}));
+    mesh.position.copy(p);mesh.userData={place};scene.add(mesh);
+    const glow=new THREE.Mesh(new THREE.SphereGeometry(.88,24,24),new THREE.MeshBasicMaterial({color:c.base,transparent:true,opacity:.1,side:THREE.BackSide,depthWrite:false}));
+    glow.position.copy(p);scene.add(glow);
+    const shine=new THREE.Mesh(new THREE.SphereGeometry(.22,12,12),new THREE.MeshBasicMaterial({color:0xffffff,transparent:true,opacity:.28}));
+    shine.position.set(p.x+.18,p.y+.2,p.z+.32);scene.add(shine);
+    const shadow=new THREE.Mesh(new THREE.CircleGeometry(.6,24),new THREE.MeshBasicMaterial({color:c.em,transparent:true,opacity:.22,depthWrite:false}));
+    shadow.rotation.x=-Math.PI/2;shadow.position.set(p.x,-1.15,p.z);scene.add(shadow);
+    const offset=Math.random()*Math.PI*2;
+    const b={mesh,glow,shine,shadow,place,offset,baseY:p.y,sT:0,sC:0};
+    bubbles.push(b);
+    setTimeout(()=>{const found=bubbles.find(x=>x.mesh===mesh);if(found)found.sT=1;},i*120+80);
+  });
+}
+
+function getPool(){if(mode==='local')return FALLBACK.local;if(mode==='hike')return FALLBACK.hike;return FALLBACK.trip.filter(t=>t.driveMin<=radius);}
+
+// ORBIT
+let isDrag=false,lastX=0,lastY=0,rotY=0,rotX=.15,autoRot=true;
+const target=new THREE.Vector3(0,0,0);
+let tapX=0,tapY=0,tapT=0;
+
+canvas.addEventListener('pointerdown',e=>{isDrag=true;lastX=e.clientX;lastY=e.clientY;tapX=e.clientX;tapY=e.clientY;tapT=Date.now();autoRot=false;clearTimeout(canvas._rt);canvas._rt=setTimeout(()=>autoRot=true,3500);});
+window.addEventListener('pointermove',e=>{if(!isDrag)return;rotY+=(e.clientX-lastX)*.005;rotX+=(e.clientY-lastY)*.003;rotX=Math.max(-.2,Math.min(.6,rotX));lastX=e.clientX;lastY=e.clientY;});
+window.addEventListener('pointerup',e=>{isDrag=false;if(Date.now()-tapT<300&&Math.abs(e.clientX-tapX)<10&&Math.abs(e.clientY-tapY)<10)pickBubble(e.clientX,e.clientY);});
+canvas.addEventListener('touchstart',e=>{const t=e.touches[0];isDrag=true;lastX=tapX=t.clientX;lastY=tapY=t.clientY;tapT=Date.now();autoRot=false;clearTimeout(canvas._rt);canvas._rt=setTimeout(()=>autoRot=true,3500);},{passive:true});
+window.addEventListener('touchmove',e=>{if(!isDrag)return;const t=e.touches[0];rotY+=(t.clientX-lastX)*.005;rotX+=(t.clientY-lastY)*.003;rotX=Math.max(-.2,Math.min(.6,rotX));lastX=t.clientX;lastY=t.clientY;},{passive:true});
+window.addEventListener('touchend',e=>{isDrag=false;if(e.changedTouches.length){const t=e.changedTouches[0];if(Date.now()-tapT<300&&Math.abs(t.clientX-tapX)<12&&Math.abs(t.clientY-tapY)<12)pickBubble(t.clientX,t.clientY);}});
+
+const ray=new THREE.Raycaster(),mouse=new THREE.Vector2();
+function pickBubble(cx,cy){mouse.x=(cx/innerWidth)*2-1;mouse.y=-(cy/innerHeight)*2+1;ray.setFromCamera(mouse,camera);const hits=ray.intersectObjects(bubbles.map(b=>b.mesh));if(hits.length){openPanel(hits[0].object.userData.place);autoRot=false;clearTimeout(canvas._rt);canvas._rt=setTimeout(()=>autoRot=true,10000);}}
+
+// ANIMATE
+const clock=new THREE.Clock();
+(function animate(){requestAnimationFrame(animate);const t=clock.getElapsedTime();
+if(autoRot)rotY+=.003;
+const r=11,cx=Math.sin(rotY)*r*Math.cos(rotX),cz=Math.cos(rotY)*r*Math.cos(rotX),cy2=r*Math.sin(rotX)+2;
+camera.position.lerp(new THREE.Vector3(cx,cy2,cz),.06);camera.lookAt(target);
+rimLight.intensity=2.2+Math.sin(t*1.1)*.6;rimLight.position.set(Math.sin(t*.4)*3,4+Math.sin(t*.6),Math.cos(t*.4)*3);
+groundGlow.intensity=1.0+Math.sin(t*.8)*.4;
+const pp=pGeo.attributes.position.array;
+for(let i=0;i<pN;i++){pp[i*3]+=pVel[i*3];pp[i*3+1]+=pVel[i*3+1];pp[i*3+2]+=pVel[i*3+2];if(pp[i*3+1]>8){pp[i*3+1]=-1;pp[i*3]=(Math.random()-.5)*18;pp[i*3+2]=(Math.random()-.5)*18;}}
+pGeo.attributes.position.needsUpdate=true;
+bubbles.forEach(b=>{b.sC+=(b.sT-b.sC)*.1;const s=b.sC,sq=1+Math.sin(t*2.2+b.offset)*.04;
+b.mesh.scale.set(s*sq,s/sq,s*sq);b.glow.scale.set(s*sq,s/sq,s*sq);b.shine.scale.setScalar(s);
+b.mesh.position.y=b.baseY+Math.sin(t*1.1+b.offset)*.22;b.glow.position.y=b.mesh.position.y;b.shine.position.y=b.mesh.position.y+.2;
+b.mesh.rotation.y=t*.25+b.offset;b.glow.material.opacity=.08+Math.sin(t*1.8+b.offset)*.06;b.shadow.material.opacity=s*.22;});
+renderer.render(scene,camera);})();
+
+// MODE
+window.setMode=async function(m){mode=m;['local','trip','hike'].forEach(id=>document.getElementById('btn-'+id).className='mbtn'+(m===id?' active':''));
+document.getElementById('radius-bar').className=m==='trip'?'visible':'';
+renderer.setClearColor(m==='hike'?0x0a1f0f:0x1a1035,1);scene.fog.color.setHex(m==='hike'?0x0a1f0f:0x1a1035);
+document.getElementById('hint').textContent=m==='hike'?'🥾 Tap a trail bubble':'🌍 Drag to spin · Tap a bubble';
+closePanel();spawnBubbles(getPool());
+if(userLat&&API){let data=null;
+if(m==='local')data=await fAPI('/api/discover','POST',{lat:userLat,lng:userLng,city:cityName,state:userState,mode:'local',radius:60,count:5});
+if(m==='trip')data=await fAPI('/api/day-trips','POST',{lat:userLat,lng:userLng,city:cityName,state:userState,mode:'trip',radius,count:5});
+if(m==='hike')data=await fAPI('/api/trails?lat='+userLat+'&lng='+userLng);
+const pl=data?.places||(Array.isArray(data)?data:[]);
+if(pl.length){FALLBACK[m]=pl.map((p,i)=>({...FALLBACK[m][i%FALLBACK[m].length],...p,type:m}));spawnBubbles(getPool());toast('✨ Real discoveries loaded!');}}};
+
+window.setRadius=function(r){radius=r;document.querySelectorAll('.rpill').forEach(p=>{const v=p.textContent.includes('30')?30:p.textContent.includes('1')?60:120;p.className='rpill'+(v===r?' active':'');});spawnBubbles(getPool());};
+
+// PANEL
+function openPanel(place){
+  activePlace=place;
+  const saved=savedPlaces.find(p=>p.id===place.id);
+  const tags=(place.tags||[]).map(t=>'<span class="sh-tag">'+t+'</span>').join('');
+  const buzz=Math.round((place.buzz||.7)*100);
+  const tc=mode==='local'?'#a855f7':mode==='trip'?'#ec4899':'#4ade80';
+  const tb=mode==='local'?'rgba(168,85,247,.12)':mode==='trip'?'rgba(236,72,153,.12)':'rgba(74,222,128,.12)';
+  const tl=mode==='local'?'Local Gem':mode==='trip'?'Day Trip':'Trail';
+  const stars='★'.repeat(Math.round(place.rating||4))+'☆'.repeat(5-Math.round(place.rating||4));
+  let extra='';
+  if(mode==='hike'&&place.trail){const tr=place.trail,pips='●'.repeat(tr.diff)+'○'.repeat(5-tr.diff);extra='<div class="sh-stats"><div class="sh-stat"><div class="sh-stat-v">'+tr.d+'</div><div class="sh-stat-l">Distance</div></div><div class="sh-stat"><div class="sh-stat-v">'+tr.e+'</div><div class="sh-stat-l">Elevation</div></div><div class="sh-stat"><div class="sh-stat-v" style="font-size:11px">'+pips+'</div><div class="sh-stat-l">Difficulty</div></div></div>';}
+  else if(mode==='trip')extra='<div class="sh-drive">🚗 '+place.dist+'</div>';
+  else extra='<div class="sh-buzz-row"><span style="font-size:9px;color:#8c7f74;text-transform:uppercase;letter-spacing:.5px">🔥 Buzz</span><div class="sh-buzz-track"><div class="sh-buzz-fill" style="width:'+buzz+'%;background:'+tc+'"></div></div><span style="font-size:10px;color:#8c7f74;font-weight:600">'+buzz+'%</span><span class="sh-stars">'+stars+'</span></div>';
+  const photo=place.photo_url?'<img src="'+place.photo_url+'" style="width:100%;height:150px;object-fit:cover;border-radius:14px;margin-bottom:14px;" onerror="this.style.display=\'none\'"/>':'<div class="sh-emoji">'+place.emoji+'</div>';
+  const openB=place.open_now!==undefined?'<span class="'+(place.open_now?'open-yes':'open-no')+'">'+( place.open_now?'● Open now':'● Closed')+'</span>':'';
+  const traces=place.traces||[];
+  const wall=traces.length?traces.slice(0,6).map(t=>'<img class="trace-thumb" src="'+t.photo_url+'" onerror="this.style.display=\'none\'">').join('')+(traces.length<6?'<div class="trace-empty" onclick="openTC(\''+place.name+'\',\''+mode+'\')">+</div>':''):'<div class="trace-empty" onclick="openTC(\''+place.name+'\',\''+mode+'\')">📸</div><div class="trace-empty" style="opacity:.4">📸</div><div class="trace-empty" style="opacity:.15">📸</div>';
+  const traceSec='<div style="border-top:1px solid rgba(60,50,40,.1);padding-top:12px;margin-top:4px;margin-bottom:14px"><div class="trace-count">📍 '+(traces.length?'<strong>'+traces.length+'</strong> trace'+(traces.length!==1?'s':'')+' from real visitors':'Be the first to leave a Trace')+'</div><div class="traces-wall">'+wall+'</div><button class="btn-trace" onclick="openTC(\''+place.name+'\',\''+mode+'\')">+ Leave a Trace — one photo, one sentence</button></div>';
+  document.getElementById('panel-content').innerHTML=photo+'<span class="sh-type" style="background:'+tb+';color:'+tc+'">'+tl+'</span><div class="sh-name">'+place.name+'</div>'+openB+'<div class="sh-why">'+place.why+'</div><div class="sh-tip">'+place.tip+'</div><div class="sh-tags">'+tags+'</div>'+extra+traceSec+'<div class="sh-actions"><button class="sh-save '+(saved?'saved':'')+'" onclick="savePlace('+place.id+')">'+(saved?'✓ Saved':'+ Save to My Day')+'</button><button class="sh-close" onclick="closePanel()">✕</button></div>';
+  document.getElementById('panel-overlay').classList.add('open');
+  autoRot=false;clearTimeout(canvas._rt);canvas._rt=setTimeout(()=>autoRot=true,10000);
+}
+window.closePanel=function(){document.getElementById('panel-overlay').classList.remove('open');clearTimeout(canvas._rt);canvas._rt=setTimeout(()=>autoRot=true,3000);};
+window.savePlace=function(id){const all=[...FALLBACK.local,...FALLBACK.trip,...FALLBACK.hike],place=all.find(p=>p.id===id);if(!place)return;if(!savedPlaces.find(p=>p.id===id)){savedPlaces.push(place);const b=document.getElementById('saved-bar');b.style.display='block';b.textContent='✦ My Day: '+savedPlaces.map(p=>p.emoji+' '+p.name.split(' ')[0]).join(' · ');toast('✓ Saved — '+place.name);}closePanel();};
+
+// TRACES
+window.openTC=function(name,type){if(!currentUser&&sbClient){toast('Sign in to leave a Trace');handleAuth();return;}traceTarget={place_name:name,place_type:type||'local',lat:userLat||0,lng:userLng||0};document.getElementById('tc-name').textContent=name;document.getElementById('tc-text').value='';document.getElementById('tc-count').textContent='0';document.getElementById('tc-go').disabled=true;document.getElementById('tc-preview').style.display='none';document.getElementById('tc-ph').style.display='flex';tcFile=null;document.getElementById('trace-composer').classList.add('open');closePanel();};
+window.closeTC=()=>document.getElementById('trace-composer').classList.remove('open');
+document.getElementById('tc-file').addEventListener('change',e=>{const f=e.target.files[0];if(!f)return;tcFile=f;const pr=document.getElementById('tc-preview');pr.src=URL.createObjectURL(f);pr.style.display='block';document.getElementById('tc-ph').style.display='none';chkTC();e.target.value='';});
+document.getElementById('tc-text').addEventListener('input',e=>{document.getElementById('tc-count').textContent=e.target.value.length;chkTC();});
+function chkTC(){document.getElementById('tc-go').disabled=!(tcFile&&document.getElementById('tc-text').value.trim().length>=5);}
+window.submitTrace=async function(){const s=document.getElementById('tc-text').value.trim();if(!tcFile||!s||!traceTarget)return;const btn=document.getElementById('tc-go');btn.disabled=true;btn.textContent='Saving…';try{const r=await fAPI('/api/traces','POST',{...traceTarget,sentence:s},'Bearer '+(userJwt||''));if(r?.trace_id){const fd=new FormData();fd.append('file',tcFile);await fetch('/api/traces/'+r.trace_id+'/photo',{method:'POST',headers:{Authorization:'Bearer '+(userJwt||'')},body:fd});}toast('✨ Trace left!');closeTC();}catch(e){toast('Could not save trace');btn.disabled=false;btn.textContent='Leave Trace ✦';}};
+
+// AUTH
+function initSB(){try{sbClient=supabase.createClient(SB_URL,SB_ANON);sbClient.auth.onAuthStateChange((_,s)=>{currentUser=s?.user||null;userJwt=s?.access_token||null;upAuthUI();});sbClient.auth.getSession().then(({data})=>{currentUser=data.session?.user||null;userJwt=data.session?.access_token||null;upAuthUI();});}catch(e){}}
+function upAuthUI(){const l=document.getElementById('auth-label'),av=document.getElementById('auth-avatar');if(currentUser){l.textContent=currentUser.user_metadata?.full_name?.split(' ')[0]||'You';const s=currentUser.user_metadata?.avatar_url;if(s){av.src=s;av.style.display='block';}}else{l.textContent='Sign in';av.style.display='none';}}
+window.handleAuth=async function(){if(!sbClient){toast('Sign in available once deployed');return;}if(currentUser){await sbClient.auth.signOut();toast('Signed out');}else await sbClient.auth.signInWithOAuth({provider:'google',options:{redirectTo:location.href}});};
+
+// API
+async function fAPI(path,method='GET',body=null,auth=null){try{const o={method,headers:{'Content-Type':'application/json'}};if(auth)o.headers['Authorization']=auth;if(body&&method!=='GET')o.body=JSON.stringify(body);const r=await fetch(path,o);return r.ok?r.json():null;}catch{return null;}}
+
+// PWA
+function initPWA(){if('serviceWorker'in navigator)navigator.serviceWorker.register('/sw.js').catch(()=>{});window.addEventListener('beforeinstallprompt',e=>{e.preventDefault();deferredInstall=e;setTimeout(()=>{if(deferredInstall&&!matchMedia('(display-mode:standalone)').matches)document.getElementById('install-banner').classList.add('visible');},45000);});window.addEventListener('appinstalled',()=>{toast('✓ Installed!');hideInstallBanner();});}
+window.triggerInstall=async function(){if(!deferredInstall){toast('Use "Add to Home Screen" in your browser');return;}deferredInstall.prompt();const{outcome}=await deferredInstall.userChoice;if(outcome==='accepted')toast('Installing…');deferredInstall=null;hideInstallBanner();};
+window.hideInstallBanner=()=>document.getElementById('install-banner').classList.remove('visible');
+
+// UTILS
+function setP(p,m){document.getElementById('lprog').style.width=p+'%';document.getElementById('lmsg').textContent=m;}
+function hideLanding(){const l=document.getElementById('loading');l.classList.add('out');setTimeout(()=>l.style.display='none',800);}
+window.toast=function(m){const t=document.getElementById('toast');t.textContent=m;t.classList.add('show');clearTimeout(t._t);t._t=setTimeout(()=>t.classList.remove('show'),2600);};
+
+// INIT
+async function init(){
+  initSB();initPWA();spawnBubbles(getPool());setP(20,'Building world…');
+  const mx=setTimeout(hideLanding,9000);
+  if(!navigator.geolocation){clearTimeout(mx);setP(100,'Demo mode');setTimeout(hideLanding,500);return;}
+  setP(35,'Detecting location…');
+  navigator.geolocation.getCurrentPosition(async pos=>{
+    clearTimeout(mx);userLat=pos.coords.latitude;userLng=pos.coords.longitude;
+    setP(50,'Finding your city…');
+    const geo=await fAPI('/api/geocode?lat='+userLat+'&lng='+userLng);
+    if(geo?.city){cityName=geo.city;userState=geo.state||'';document.getElementById('city-tag').textContent='Day Tripper · '+cityName;}
+    setP(68,'Fetching discoveries…');
+    const[lR,tR,hR]=await Promise.allSettled([fAPI('/api/discover','POST',{lat:userLat,lng:userLng,city:cityName,state:userState,mode:'local',radius:60,count:5}),fAPI('/api/day-trips','POST',{lat:userLat,lng:userLng,city:cityName,state:userState,mode:'trip',radius:60,count:5}),fAPI('/api/trails?lat='+userLat+'&lng='+userLng)]);
+    const lp=lR.value?.places||[],tp=tR.value?.places||[],hp=hR.value?.places||(Array.isArray(hR.value)?hR.value:[]);
+    if(lp.length)FALLBACK.local=lp.map((p,i)=>({...FALLBACK.local[i%5],...p,type:'local'}));
+    if(tp.length)FALLBACK.trip=tp.map((p,i)=>({...FALLBACK.trip[i%5],...p,type:'trip'}));
+    if(hp.length)FALLBACK.hike=hp.map((p,i)=>({...FALLBACK.hike[i%3],...p,type:'hike'}));
+    spawnBubbles(getPool());setP(100,'Ready!');setTimeout(hideLanding,400);
+    setTimeout(()=>toast((lp.length||tp.length||hp.length)?'✨ Real discoveries for '+cityName+'!':'💡 Demo mode — add API keys'),800);
+  },()=>{clearTimeout(mx);setP(100,'Demo mode');setTimeout(hideLanding,500);toast('📍 Enable location for real nearby discoveries');},{enableHighAccuracy:true,timeout:10000});
+}
+window.addEventListener('load',init);
+</script>
+</body>
+</html>
